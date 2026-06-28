@@ -1,0 +1,6 @@
+{
+  "name": "Apreciación del discurso",
+  "description": "Aplicación para evaluar y registrar la apreciación de discursos públicos basada en el formulario S-141.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
