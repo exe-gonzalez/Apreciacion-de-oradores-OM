@@ -34,7 +34,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 // Use custom databaseId from config if provided
-export const db = initializeFirestore(app, {}, "ai-studio-apreciacindeldis-77ef307a-158f-400c-ae1d-d7d06ca50756");
+export const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true
+}, "ai-studio-apreciacindeldis-77ef307a-158f-400c-ae1d-d7d06ca50756");
 export const auth = getAuth(app);
 
 export enum OperationType {

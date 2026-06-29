@@ -57,51 +57,12 @@ export default function HomeView({
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
 
         <div className="mb-6">
-          <h2 className="text-display-sm font-semibold text-on-surface mb-1">Nuevo Orador</h2>
-          <p className="text-body-medium text-on-surface-variant">
-            Ingrese los detalles del discurso para iniciar la apreciación
-          </p>
+          <h2 className="text-title-large md:text-headline-small font-semibold text-on-surface mb-1 leading-normal">
+            Reconozca los puntos fuertes y comparta sugerencias constructivas para ayudar al orador a seguir mejorando.
+          </h2>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {/* Mode Selector */}
-          <div className="mb-2">
-            <label className="block text-label-medium text-on-surface-variant mb-2 font-medium">
-              Tipo de apreciación
-            </label>
-            <div className="grid grid-cols-2 gap-2 p-1 bg-surface-container rounded-xl border border-outline-variant/50">
-              <button
-                type="button"
-                onClick={() => setMode('colaborativa')}
-                className={`py-2.5 px-3 rounded-lg text-body-medium font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                  mode === 'colaborativa'
-                    ? 'bg-white text-primary shadow-sm border-b border-primary/10'
-                    : 'text-text-secondary hover:text-on-surface'
-                }`}
-              >
-                <Users className="w-4 h-4" />
-                Colaborativa
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode('individual')}
-                className={`py-2.5 px-3 rounded-lg text-body-medium font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                  mode === 'individual'
-                    ? 'bg-white text-primary shadow-sm border-b border-primary/10'
-                    : 'text-text-secondary hover:text-on-surface'
-                }`}
-              >
-                <Shield className="w-4 h-4" />
-                Individual
-              </button>
-            </div>
-            <p className="text-xs text-on-surface-variant mt-2 px-1">
-              {mode === 'colaborativa' 
-                ? '🟢 Permite que múltiples hermanos califiquen al mismo tiempo con un enlace en tiempo real.' 
-                : '🔒 Privada. Se guarda únicamente en tu propio navegador de forma local.'}
-            </p>
-          </div>
-
           {/* Input Orador */}
           <div className="relative">
             <label className="block text-label-medium text-on-surface-variant mb-1 font-medium" htmlFor="speaker-name">
