@@ -13,7 +13,9 @@ import {
   ThumbsUp,
   MessageSquare,
   Sparkles,
-  AlertCircle
+  AlertCircle,
+  Loader2,
+  Copy
 } from 'lucide-react';
 import { SharedSession, EvaluationSubmission, EvaluationAnswers, RatingValue } from '../types';
 import { FORM_SECTIONS } from '../initialData';
@@ -35,6 +37,97 @@ export default function CollaborativeSessionView({
   const [evaluations, setEvaluations] = useState<EvaluationSubmission[]>([]);
   const [activeTab, setActiveTab] = useState<'form' | 'results'>('form');
   const [copied, setCopied] = useState(false);
+
+  const [aiSummary, setAiSummary] = useState<string>('');
+  const [aiLoading, setAiLoading] = useState<boolean>(false);
+  const [aiError, setAiError] = useState<string>('');
+  const [copiedAi, setCopiedAi] = useState<boolean>(false);
+
+  // Clear AI Summary on mount or when evaluations change in size
+  useEffect(() => {
+    setAiSummary('');
+    setAiError('');
+    setCopiedAi(false);
+  }, [session.id, evaluations.length]);
+
+  const handleGenerateAiSummary = async () => {
+    if (evaluations.length === 0) return;
+    setAiLoading(true);
+    setAiError('');
+    setAiSummary('');
+
+    // Compile rating summaries to give context to Gemini
+    const questionKeys: { key: keyof EvaluationAnswers; label: string }[] = [
+      { key: 'facilEntender', label: '¿Fácil de entender para recién interesados/estudiantes?' },
+      { key: 'adaptadoTestigos', label: '¿Adaptado para animar y enseñar a Testigos?' },
+      { key: 'mensajePositivo', label: '¿Centrado en el mensaje positivo y alentador?' },
+      { key: 'beneficiosPrincipios', label: '¿Destacó los beneficios de aplicar principios?' },
+      { key: 'evitoDespectivos', label: '¿Evitó comentarios despectivos sobre no Testigos?' },
+      { key: 'cantidadAdecuada', label: '¿Cantidad adecuada de textos bíblicos?' },
+      { key: 'desarrolloTextos', label: '¿Textos bien desarrollados (explicación/ilustración/aplicación)?' },
+      { key: 'naturalidad', label: '¿Habló con naturalidad sin leer/depender de bosquejo?' },
+      { key: 'entusiasmoCalidez', label: '¿Mostró entusiasmo, calidez e interés?' },
+      { key: 'ayudasReforzaron', label: '¿Ayudas visuales reforzaron ideas principales?' },
+      { key: 'ayudasApropiadas', label: '¿Ayudas visuales ayudaron a enseñar/fueron apropiadas?' },
+      { key: 'practicoMotivador', label: '¿Fue práctico y motivó a aplicar lo aprendido?' },
+    ];
+
+    const respuestasResumen = questionKeys
+      .map(({ key, label }) => {
+        const val = getMajorityRating(key);
+        const ratingStr = val === 'si' ? 'Mayoría Sí' : val === 'parte' ? 'Mayoría En parte' : 'Mayoría Por mejorar';
+        return `- ${label}: ${ratingStr}`;
+      })
+      .join('\n');
+
+    const puntosFuertes = evaluations
+      .map((ev) => ev.puntoFuerte.trim())
+      .filter(Boolean);
+
+    const sugerencias = evaluations
+      .map((ev) => ev.sugerencia.trim())
+      .filter(Boolean);
+
+    try {
+      const response = await fetch('/api/generate-summary', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orador: session.orador,
+          tema: session.tema,
+          congregacion: session.congregacion,
+          puntosFuertes,
+          sugerencias,
+          respuestasResumen,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al conectar con el servidor.');
+      }
+
+      setAiSummary(data.summary);
+    } catch (err: any) {
+      console.error(err);
+      setAiError(err.message || 'Error al generar la apreciación con la IA.');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleCopyAiSummary = () => {
+    if (!aiSummary) return;
+    navigator.clipboard.writeText(aiSummary).then(() => {
+      setCopiedAi(true);
+      setTimeout(() => setCopiedAi(false), 2000);
+      onToast('¡Mensaje de IA copiado al portapapeles!', 'success');
+    }).catch(() => {
+      onToast('No se pudo copiar el mensaje de la IA.', 'error');
+    });
+  };
 
   // User's own submission draft state
   const [answers, setAnswers] = useState<EvaluationAnswers>({
@@ -788,6 +881,71 @@ ${sugerenciasText}
                     )}
                   </div>
                 </div>
+              </div>
+
+              {/* AI Summary Recommendation Box for Collaborative Session */}
+              <div className="bg-gradient-to-br from-indigo-50/50 to-primary/5 rounded-xl p-6 border border-primary/25 shadow-sm flex flex-col gap-4 mt-6">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-title-medium font-bold text-primary flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-primary animate-pulse" />
+                    Generar Mensaje Consolidado con IA
+                  </h4>
+                </div>
+                <p className="text-body-medium text-on-surface-variant leading-relaxed">
+                  Consolida todas las respuestas de los hermanos participantes para redactar un párrafo equilibrado y cálido. Felicitará al orador sinceramente y ofrecerá valiosas sugerencias constructivas con total claridad y amabilidad, ideales para enviárselas directamente.
+                </p>
+
+                {aiSummary ? (
+                  <div className="flex flex-col gap-3">
+                    <div className="bg-white border border-outline-variant/35 rounded-xl p-4 text-body-medium text-on-surface leading-relaxed italic relative">
+                      {aiSummary}
+                    </div>
+                    <button
+                      onClick={handleCopyAiSummary}
+                      className={`self-end flex items-center gap-1.5 text-xs font-bold py-2.5 px-5 rounded-full transition-all cursor-pointer ${
+                        copiedAi 
+                          ? 'bg-success-muted text-emerald-800 border border-emerald-200' 
+                          : 'bg-primary text-on-primary hover:bg-primary/95 shadow-sm'
+                      }`}
+                    >
+                      {copiedAi ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-green-600" />
+                          <span>¡Copiado con éxito!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>Copiar párrafo con IA</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleGenerateAiSummary}
+                    disabled={aiLoading}
+                    className="w-full bg-white hover:bg-primary/5 text-primary font-bold border border-primary/30 py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer shadow-sm"
+                  >
+                    {aiLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Consolidando y redactando con IA...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4 text-primary" />
+                        <span>Generar Párrafo con IA</span>
+                      </>
+                    )}
+                  </button>
+                )}
+
+                {aiError && (
+                  <p className="text-xs text-error font-medium mt-1">
+                    ⚠️ {aiError}
+                  </p>
+                )}
               </div>
             </>
           )}

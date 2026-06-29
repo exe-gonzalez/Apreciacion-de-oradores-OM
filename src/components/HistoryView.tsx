@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronRight, Share2, AlertCircle, Trash2, Check } from 'lucide-react';
+import { ChevronRight, Share2, AlertCircle, Trash2, Check, Sparkles, Loader2, Copy } from 'lucide-react';
 import { Evaluation, EvaluationAnswers } from '../types';
 
 interface HistoryViewProps {
@@ -17,6 +17,87 @@ export default function HistoryView({
 }: HistoryViewProps) {
   const [activeId, setActiveId] = useState<string | null>(selectedId);
   const [copied, setCopied] = useState(false);
+
+  const [aiSummary, setAiSummary] = useState<string>('');
+  const [aiLoading, setAiLoading] = useState<boolean>(false);
+  const [aiError, setAiError] = useState<string>('');
+  const [copiedAi, setCopiedAi] = useState<boolean>(false);
+
+  // Reset AI summary when active evaluation changes
+  useEffect(() => {
+    setAiSummary('');
+    setAiError('');
+    setCopiedAi(false);
+  }, [activeId]);
+
+  const handleGenerateAiSummary = async () => {
+    if (!activeEval) return;
+    setAiLoading(true);
+    setAiError('');
+    setAiSummary('');
+
+    const questionKeys: { key: keyof EvaluationAnswers; label: string }[] = [
+      { key: 'facilEntender', label: '¿Fácil de entender para recién interesados/estudiantes?' },
+      { key: 'adaptadoTestigos', label: '¿Adaptado para animar y enseñar a Testigos?' },
+      { key: 'mensajePositivo', label: '¿Centrado en el mensaje positivo y alentador?' },
+      { key: 'beneficiosPrincipios', label: '¿Destacó los beneficios de aplicar principios?' },
+      { key: 'evitoDespectivos', label: '¿Evitó comentarios despectivos sobre no Testigos?' },
+      { key: 'cantidadAdecuada', label: '¿Cantidad adecuada de textos bíblicos?' },
+      { key: 'desarrolloTextos', label: '¿Textos bien desarrollados (explicación/ilustración/aplicación)?' },
+      { key: 'naturalidad', label: '¿Habló con naturalidad sin leer/depender de bosquejo?' },
+      { key: 'entusiasmoCalidez', label: '¿Mostró entusiasmo, calidez e interés?' },
+      { key: 'ayudasReforzaron', label: '¿Ayudas visuales reforzaron ideas principales?' },
+      { key: 'ayudasApropiadas', label: '¿Ayudas visuales ayudaron a enseñar/fueron apropiadas?' },
+      { key: 'practicoMotivador', label: '¿Fue práctico y motivó a aplicar lo aprendido?' },
+    ];
+
+    const respuestasResumen = questionKeys
+      .map(({ key, label }) => {
+        const val = activeEval.respuestas[key];
+        const ratingStr = val === 'si' ? 'Sí' : val === 'parte' ? 'En parte' : 'Por mejorar';
+        return `- ${label}: ${ratingStr}`;
+      })
+      .join('\n');
+
+    try {
+      const response = await fetch('/api/generate-summary', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orador: activeEval.orador,
+          tema: activeEval.tema,
+          congregacion: activeEval.congregacion,
+          puntosFuertes: activeEval.puntoFuerte ? [activeEval.puntoFuerte] : [],
+          sugerencias: activeEval.sugerencia ? [activeEval.sugerencia] : [],
+          respuestasResumen,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al conectar con el servidor.');
+      }
+
+      setAiSummary(data.summary);
+    } catch (err: any) {
+      console.error(err);
+      setAiError(err.message || 'Error al generar la apreciación con la IA.');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleCopyAiSummary = () => {
+    if (!aiSummary) return;
+    navigator.clipboard.writeText(aiSummary).then(() => {
+      setCopiedAi(true);
+      setTimeout(() => setCopiedAi(false), 2000);
+    }).catch(err => {
+      console.error('Error copying text:', err);
+    });
+  };
 
   // Sync state with parent's selected id
   useEffect(() => {
@@ -250,6 +331,71 @@ ${activeEval.sugerencia}
                   <p className="text-body-medium text-text-secondary leading-relaxed">
                     {activeEval.sugerencia}
                   </p>
+                </div>
+
+                {/* AI Summary Recommendation Box */}
+                <div className="bg-gradient-to-br from-indigo-50/50 to-primary/5 rounded-xl p-5 border border-primary/20 shadow-sm flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <h5 className="text-label-large font-bold text-primary flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-primary animate-pulse" />
+                      Redactar Mensaje Equilibrado con IA
+                    </h5>
+                  </div>
+                  <p className="text-body-small text-on-surface-variant leading-normal">
+                    Genera un único párrafo sumamente cálido y equilibrado que felicita sincera y fraternalmente al orador, mientras le aconseja con total amabilidad y tacto sobre sus áreas de mejora. ¡Listo para copiar y compartir!
+                  </p>
+
+                  {aiSummary ? (
+                    <div className="flex flex-col gap-3">
+                      <div className="bg-white border border-outline-variant/35 rounded-lg p-4 text-body-medium text-on-surface leading-relaxed italic relative">
+                        {aiSummary}
+                      </div>
+                      <button
+                        onClick={handleCopyAiSummary}
+                        className={`self-end flex items-center gap-1.5 text-xs font-bold py-2 px-4 rounded-full transition-all cursor-pointer ${
+                          copiedAi 
+                            ? 'bg-success-muted text-emerald-800 border border-emerald-200' 
+                            : 'bg-primary text-on-primary hover:bg-primary/95 shadow-sm'
+                        }`}
+                      >
+                        {copiedAi ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-green-600" />
+                            <span>¡Copiado!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5" />
+                            <span>Copiar párrafo con IA</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={handleGenerateAiSummary}
+                      disabled={aiLoading}
+                      className="w-full bg-white hover:bg-primary/5 text-primary font-bold border border-primary/30 py-2.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer shadow-sm"
+                    >
+                      {aiLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Generando párrafo fraternal...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4 text-primary" />
+                          <span>Generar Mensaje con IA</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+
+                  {aiError && (
+                    <p className="text-xs text-error font-medium mt-1">
+                      ⚠️ {aiError}
+                    </p>
+                  )}
                 </div>
               </div>
 
