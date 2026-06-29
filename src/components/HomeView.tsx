@@ -22,7 +22,6 @@ export default function HomeView({
   const [tema, setTema] = useState('');
   const [mode, setMode] = useState<'colaborativa' | 'individual'>('colaborativa');
   const [error, setError] = useState('');
-  const [activeHistoryTab, setActiveHistoryTab] = useState<'colaborativo' | 'individual'>('colaborativo');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,12 +56,12 @@ export default function HomeView({
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
 
         <div className="mb-8 text-center max-w-2xl mx-auto flex flex-col items-center gap-3">
+          <p className="text-body-large md:text-title-medium text-on-surface font-medium italic leading-relaxed">
+            Reconozca los puntos fuertes y comparta sugerencias constructivas para ayudar al orador a seguir mejorando.
+          </p>
           <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-full text-primary animate-pulse">
             <Sparkles className="w-6 h-6" />
           </div>
-          <p className="text-body-large md:text-title-medium text-on-surface font-medium leading-relaxed">
-            Reconozca los puntos fuertes y comparta sugerencias constructivas para ayudar al orador a seguir mejorando.
-          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -146,108 +145,51 @@ export default function HomeView({
             <History className="text-primary w-5 h-5" />
             Apreciaciones Recientes
           </h3>
-
-          <div className="flex gap-2 mt-2 sm:mt-0 bg-surface-container p-1 rounded-lg border border-outline-variant/30">
-            <button
-              onClick={() => setActiveHistoryTab('colaborativo')}
-              className={`text-xs font-bold py-1.5 px-3 rounded-md transition-all cursor-pointer ${
-                activeHistoryTab === 'colaborativo'
-                  ? 'bg-white text-primary shadow-sm'
-                  : 'text-text-secondary hover:text-on-surface'
-              }`}
-            >
-              En línea ({sharedSessions.length})
-            </button>
-            <button
-              onClick={() => setActiveHistoryTab('individual')}
-              className={`text-xs font-bold py-1.5 px-3 rounded-md transition-all cursor-pointer ${
-                activeHistoryTab === 'individual'
-                  ? 'bg-white text-primary shadow-sm'
-                  : 'text-text-secondary hover:text-on-surface'
-              }`}
-            >
-              Individuales ({recentEvaluations.length})
-            </button>
-          </div>
         </div>
 
         <div className="flex flex-col gap-2">
-          {activeHistoryTab === 'colaborativo' ? (
-            sharedSessions.length === 0 ? (
-              <p className="text-body-medium text-on-surface-variant px-2 py-4 italic text-center bg-white rounded-lg border border-outline-variant/25">
-                No hay sesiones colaborativas en línea todavía.
-              </p>
-            ) : (
-              sharedSessions.map((item) => (
-                <div
-                  key={item.id}
-                  onClick={() => onSelectSharedSession(item.id)}
-                  className="bg-white border border-outline-variant/30 rounded-lg p-4 flex items-center justify-between hover:bg-surface-container-low transition-colors cursor-pointer active:scale-[0.99]"
-                  role="button"
-                  title={`Ver sesión de ${item.orador}`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-semibold ${getAvatarBg(item.orador)}`}>
-                      <span className="text-[14px]">{getInitials(item.orador)}</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-body-large font-semibold text-on-surface leading-none">
-                          {item.orador}
-                        </span>
-                        {item.status === 'active' ? (
-                          <span className="bg-success-muted text-emerald-800 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-emerald-100 flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                            Activa
-                          </span>
-                        ) : (
-                          <span className="bg-slate-100 text-slate-600 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-slate-200">
-                            Finalizada
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-body-medium text-on-surface-variant flex items-center gap-1 mt-1 font-medium">
-                        <Calendar className="w-3.5 h-3.5 text-outline" />
-                        {item.fecha} {item.congregacion ? `· ${item.congregacion}` : ''}
-                      </span>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-outline-variant" />
-                </div>
-              ))
-            )
+          {sharedSessions.length === 0 ? (
+            <p className="text-body-medium text-on-surface-variant px-2 py-4 italic text-center bg-white rounded-lg border border-outline-variant/25">
+              No hay sesiones colaborativas en línea todavía.
+            </p>
           ) : (
-            recentEvaluations.length === 0 ? (
-              <p className="text-body-medium text-on-surface-variant px-2 py-4 italic text-center bg-white rounded-lg border border-outline-variant/25">
-                No hay evaluaciones individuales guardadas todavía.
-              </p>
-            ) : (
-              recentEvaluations.map((item) => (
-                <div
-                  key={item.id}
-                  onClick={() => onSelectEvaluation(item.id)}
-                  className="bg-white border border-outline-variant/30 rounded-lg p-4 flex items-center justify-between hover:bg-surface-container-low transition-colors cursor-pointer active:scale-[0.99]"
-                  role="button"
-                  title={`Ver apreciación de ${item.orador}`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-semibold ${getAvatarBg(item.orador)}`}>
-                      <span className="text-[14px]">{getInitials(item.orador)}</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-body-large font-semibold text-on-surface leading-tight">
+            sharedSessions.map((item) => (
+              <div
+                key={item.id}
+                onClick={() => onSelectSharedSession(item.id)}
+                className="bg-white border border-outline-variant/30 rounded-lg p-4 flex items-center justify-between hover:bg-surface-container-low transition-colors cursor-pointer active:scale-[0.99]"
+                role="button"
+                title={`Ver sesión de ${item.orador}`}
+              >
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-semibold ${getAvatarBg(item.orador)}`}>
+                    <span className="text-[14px]">{getInitials(item.orador)}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-body-large font-semibold text-on-surface leading-none">
                         {item.orador}
                       </span>
-                      <span className="text-body-medium text-on-surface-variant flex items-center gap-1 mt-1 font-medium">
-                        <Calendar className="w-3.5 h-3.5 text-outline" />
-                        {item.fecha} {item.congregacion ? `· ${item.congregacion}` : ''}
-                      </span>
+                      {item.status === 'active' ? (
+                        <span className="bg-success-muted text-emerald-800 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-emerald-100 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                          Activa
+                        </span>
+                      ) : (
+                        <span className="bg-slate-100 text-slate-600 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-slate-200">
+                          Finalizada
+                        </span>
+                      )}
                     </div>
+                    <span className="text-body-medium text-on-surface-variant flex items-center gap-1 mt-1 font-medium">
+                      <Calendar className="w-3.5 h-3.5 text-outline" />
+                      {item.fecha} {item.congregacion ? `· ${item.congregacion}` : ''}
+                    </span>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-outline-variant" />
                 </div>
-              ))
-            )
+                <ChevronRight className="w-5 h-5 text-outline-variant" />
+              </div>
+            ))
           )}
         </div>
       </section>
