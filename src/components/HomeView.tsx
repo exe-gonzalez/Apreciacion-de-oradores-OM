@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Building2, BookOpen, ArrowRight, History, Calendar, ChevronRight, Share2, Shield, Users } from 'lucide-react';
+import { User, Building2, BookOpen, ArrowRight, History, Calendar, ChevronRight, Share2, Shield, Users, Sparkles } from 'lucide-react';
 import { Evaluation, SharedSession } from '../types';
 
 interface HomeViewProps {
@@ -56,10 +56,13 @@ export default function HomeView({
         {/* Decorative ambient background blur */}
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
 
-        <div className="mb-6">
-          <h2 className="text-title-large md:text-headline-small font-semibold text-on-surface mb-1 leading-normal">
+        <div className="mb-8 text-center max-w-2xl mx-auto flex flex-col items-center gap-3">
+          <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-full text-primary animate-pulse">
+            <Sparkles className="w-6 h-6" />
+          </div>
+          <p className="text-body-large md:text-title-medium text-on-surface font-medium leading-relaxed">
             Reconozca los puntos fuertes y comparta sugerencias constructivas para ayudar al orador a seguir mejorando.
-          </h2>
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
