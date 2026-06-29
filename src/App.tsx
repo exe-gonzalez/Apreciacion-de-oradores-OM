@@ -276,53 +276,11 @@ export default function App() {
       <Header 
         onMenuClick={() => triggerToast("S-141 Applet de Apreciación del Discurso", "info")}
         onProfileClick={() => setShowAdminModal(true)}
+        currentTab={currentTab}
+        setCurrentTab={setCurrentTab}
+        activeSessionId={activeSessionId}
+        onBackFromCollaborative={handleBackFromCollaborative}
       />
-
-      {/* Web Navigation (Desktop Header Anchor - matches screen layouts) */}
-      <div className="hidden md:flex fixed top-0 right-0 h-16 items-center px-8 gap-4 z-50">
-        <button
-          onClick={() => {
-            if (activeSessionId) handleBackFromCollaborative();
-            setCurrentTab('inicio');
-          }}
-          className={`font-label-large text-[14px] px-4 py-2 rounded-full transition-colors font-semibold cursor-pointer ${
-            currentTab === 'inicio' && !activeSessionId
-              ? 'text-primary bg-secondary-container font-semibold'
-              : 'text-on-surface-variant hover:bg-surface-container-high'
-          }`}
-          id="desktop-nav-inicio"
-        >
-          Inicio
-        </button>
-        <button
-          onClick={() => {
-            if (activeSessionId) handleBackFromCollaborative();
-            setCurrentTab('nueva');
-          }}
-          className={`font-label-large text-[14px] px-4 py-2 rounded-full transition-colors font-semibold cursor-pointer ${
-            currentTab === 'nueva' && !activeSessionId
-              ? 'text-primary bg-secondary-container font-semibold'
-              : 'text-on-surface-variant hover:bg-surface-container-high'
-          }`}
-          id="desktop-nav-nueva"
-        >
-          Nueva
-        </button>
-        <button
-          onClick={() => {
-            if (activeSessionId) handleBackFromCollaborative();
-            setCurrentTab('historial');
-          }}
-          className={`font-label-large text-[14px] px-4 py-2 rounded-full transition-colors font-semibold cursor-pointer ${
-            currentTab === 'historial' && !activeSessionId
-              ? 'text-primary bg-secondary-container font-semibold'
-              : 'text-on-surface-variant hover:bg-surface-container-high'
-          }`}
-          id="desktop-nav-historial"
-        >
-          Historial
-        </button>
-      </div>
 
       {/* Main Content Container */}
       <main className="flex-grow w-full max-w-[720px] md:max-w-4xl mx-auto pt-24 px-4 md:px-8 flex flex-col gap-6">
