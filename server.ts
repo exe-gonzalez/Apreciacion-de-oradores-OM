@@ -66,7 +66,20 @@ Instrucciones de redacción obligatorias:
       res.json({ summary: text.trim() });
     } catch (error: any) {
       console.error("Error generating summary:", error);
-      res.status(500).json({ error: error?.message || "Ocurrió un error al generar la apreciación con la IA." });
+      let errorMessage = error?.message || "Ocurrió un error al generar la apreciación con la IA.";
+      if (typeof errorMessage === "object") {
+        errorMessage = JSON.stringify(errorMessage);
+      }
+
+      if (
+        errorMessage.includes("API_KEY_SERVICE_BLOCKED") || 
+        errorMessage.includes("blocked") || 
+        errorMessage.includes("PERMISSION_DENIED")
+      ) {
+        errorMessage = "La clave API utilizada está bloqueada o restringida por Google Cloud. Esto ocurre porque estás intentando utilizar la clave web de Firebase, la cual tiene restricciones de uso. Para solucionarlo, por favor genera una clave API de Gemini dedicada (gratuita) desde Google AI Studio (https://aistudio.google.com/) y agrégala con el nombre GEMINI_API_KEY en las variables de entorno de tu proyecto en Vercel.";
+      }
+
+      res.status(500).json({ error: errorMessage });
     }
   });
 
