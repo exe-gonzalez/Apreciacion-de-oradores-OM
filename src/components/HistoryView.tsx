@@ -75,6 +75,11 @@ export default function HistoryView({
         }),
       });
 
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('El servicio de IA no está disponible o el servidor no respondió correctamente. Si estás usando Vercel, asegúrate de configurar la variable de entorno GEMINI_API_KEY en la configuración de tu proyecto.');
+      }
+
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error || 'Error al conectar con el servidor.');
